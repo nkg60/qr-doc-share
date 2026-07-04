@@ -9,9 +9,16 @@ export default async (requete, contexte) => {
     return json({ erreur: "Méthode non autorisée." }, 405);
   }
 
-  const token = contexte.params?.token;
+  // Token depuis la route /download/:token ; filet de sécurité : netlify dev
+  // ré-essaie parfois l'URL avec un suffixe (/index.html) sans renseigner
+  // params, on retombe alors sur le premier segment après /download/.
+  let token = contexte.params?.token;
   if (!token) {
-    return json({ erreur: "Token manquant." }, 400);
+    const segments = new URL(requete.url).pathname.split("/").filter(Boolean);
+    token = segments[1] || "";
+  }
+  if (!token) {
+    return json({ erreur: "Document introuvable ou lien expiré." }, 404);
   }
 
   const docs = getStore("docs");
