@@ -27,7 +27,6 @@ const aideVue = document.getElementById("aide-vue");
 const segmenteScope = document.getElementById("segmente-scope");
 const outilsEmails = document.getElementById("outils-emails");
 const filtreLabel = document.getElementById("filtre-label");
-const btnExportCsv = document.getElementById("btn-export-csv");
 const conteneurListe = document.getElementById("conteneur-liste");
 
 // --- État ---------------------------------------------------------------------
@@ -42,7 +41,6 @@ badgeAdmin.hidden = !suisAdmin;
 ongletLegacy.hidden = !suisAdmin;
 btnDeconnexion.innerHTML = UI.icone("deconnexion");
 btnImporter.innerHTML = UI.icone("plus", 18) + "<span>Importer</span>";
-btnExportCsv.innerHTML = UI.icone("telecharger", 16) + "<span>Exporter en CSV</span>";
 
 // Déconnexion : efface tout l'état côté client et revient à l'écran du code.
 // Pas de confirmation : action peu coûteuse à annuler.
@@ -379,7 +377,7 @@ async function supprimerDocument(doc) {
     nomMisEnAvant: doc.nom,
     message:
       "Cette action est définitive. Les emails déjà collectés pour ce document " +
-      "restent disponibles dans l'export CSV.",
+      "restent visibles dans « Emails collectés ».",
     texteConfirmer: "Supprimer définitivement",
     varianteConfirmer: "danger",
   });
@@ -631,32 +629,6 @@ async function chargerEmails() {
 }
 
 filtreLabel.addEventListener("change", afficherListeScans);
-
-// Export CSV : via fetch pour joindre l'en-tête X-Access-Code.
-btnExportCsv.addEventListener("click", async () => {
-  const restaurer = UI.boutonEnChargement(btnExportCsv, "Export…");
-  try {
-    const reponse = await fetch("/.netlify/functions/scans?format=csv", {
-      headers: { "X-Access-Code": codeAcces },
-      cache: "no-store",
-    });
-    if (!reponse.ok) {
-      const donnees = await reponse.json().catch(() => ({}));
-      throw new Error(donnees.erreur || "Échec de l'export.");
-    }
-    const blob = await reponse.blob();
-    const lien = document.createElement("a");
-    lien.href = URL.createObjectURL(blob);
-    lien.download = "scans.csv";
-    lien.click();
-    URL.revokeObjectURL(lien.href);
-    UI.toast("Fichier scans.csv téléchargé", "succes");
-  } catch (erreur) {
-    UI.toast(erreur.message, "erreur");
-  } finally {
-    restaurer();
-  }
-});
 
 // --- Démarrage -----------------------------------------------------------------------
 

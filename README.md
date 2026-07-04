@@ -14,10 +14,12 @@ l'email de chaque personne qui le récupère.
    revoir/re-télécharger le QR code, **régénérer l'URL** (rotation du token,
    l'ancienne URL cesse de fonctionner), **supprimer** (les scans collectés
    sont conservés, marqués « supprimé »).
-5. Les emails collectés sont consultables et exportables en CSV depuis la
-   page d'accueil. Chaque utilisateur ne voit que **ses** documents et **ses**
-   scans ; un **admin** (`is_admin: true`) voit tout, avec un filtre par
-   propriétaire et l'accès aux documents « legacy » (importés avant la V1.1).
+5. Les emails collectés sont consultables dans l'onglet « Emails collectés ».
+   Chaque utilisateur ne voit que **ses** documents et **ses** scans ; un
+   **admin** (`is_admin: true`) voit tout, avec un filtre par propriétaire et
+   l'accès aux documents « legacy » (importés avant la V1.1). (Un export CSV
+   reste disponible côté API : `GET /.netlify/functions/scans?format=csv`
+   avec l'en-tête `X-Access-Code`.)
 
 ## Stack
 
