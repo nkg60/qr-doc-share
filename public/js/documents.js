@@ -110,10 +110,13 @@ for (const bouton of segmenteScope.querySelectorAll("button")) {
 
 // --- Appels serveur ---------------------------------------------------------------
 
-/** GET JSON d'une fonction protégée. Redirige vers l'accueil si le code a expiré. */
+/** GET JSON d'une fonction protégée. Redirige vers l'accueil si le code a expiré.
+    cache: "no-store" : chaque affichage de vue relit le serveur, jamais le
+    cache du navigateur — une seule source de vérité. */
 async function lireFonction(cheminEtParametres) {
   const reponse = await fetch("/.netlify/functions/" + cheminEtParametres, {
     headers: { "X-Access-Code": codeAcces },
+    cache: "no-store",
   });
   if (reponse.status === 401) {
     sessionStorage.clear();
@@ -271,14 +274,25 @@ async function chargerLegacy() {
   }
 }
 
-/** Met à jour les éléments qui dépendent des droits renvoyés par le serveur. */
+/** Synchronise l'interface avec les droits renvoyés par le serveur.
+    Systématique (pas seulement en cas de changement) : le sessionStorage
+    n'est qu'une indication de départ, la vérité vient de chaque réponse.
+    Un non-admin ne voit ainsi JAMAIS le sélecteur « Tous les documents »
+    ni l'onglet legacy, même avec un état local périmé. */
 function majDroits(donnees) {
-  if (typeof donnees.isAdmin === "boolean" && donnees.isAdmin !== suisAdmin) {
+  if (typeof donnees.isAdmin === "boolean") {
     suisAdmin = donnees.isAdmin;
     sessionStorage.setItem("isAdmin", suisAdmin ? "1" : "");
     badgeAdmin.hidden = !suisAdmin;
     ongletLegacy.hidden = !suisAdmin;
     segmenteScope.hidden = !(vueCourante() === "documents" && suisAdmin);
+    if (!suisAdmin && scopeDocs !== "mine") {
+      // Retour forcé sur « Les miens » (le serveur l'imposait déjà côté données).
+      scopeDocs = "mine";
+      for (const b of segmenteScope.querySelectorAll("button")) {
+        b.classList.toggle("actif", b.dataset.scope === "mine");
+      }
+    }
   }
   if (donnees.label) labelUtilisateur.textContent = donnees.label;
 }
@@ -624,6 +638,7 @@ btnExportCsv.addEventListener("click", async () => {
   try {
     const reponse = await fetch("/.netlify/functions/scans?format=csv", {
       headers: { "X-Access-Code": codeAcces },
+      cache: "no-store",
     });
     if (!reponse.ok) {
       const donnees = await reponse.json().catch(() => ({}));

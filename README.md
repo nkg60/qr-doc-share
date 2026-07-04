@@ -97,20 +97,28 @@ npm run dev            # lance netlify dev sur http://localhost:8888
 ### Test manuel : fraîcheur de la liste « Mes documents »
 
 La liste est toujours re-fetchée depuis le serveur (une seule source de
-vérité) : au chargement de la page, après une suppression, après une rotation
-d'URL, et quand le navigateur restaure la page depuis son cache arrière/avant.
-Pour vérifier :
+vérité) à chaque affichage d'une vue : chargement de page, changement
+d'onglet, F5, navigation arrière/avant, et après chaque upload, suppression
+ou rotation. Les réponses des fonctions portent `Cache-Control: no-store`
+et les fetch de lecture passent `cache: "no-store"` : ni le navigateur ni un
+intermédiaire ne peuvent resservir une liste périmée. Pour vérifier, **sans
+jamais se déconnecter** :
 
-1. Connectez-vous avec votre code, importez un fichier depuis la page d'accueil.
-2. Ouvrez « Mes documents » : le fichier apparaît **sans recharger** la page
-   (y compris en revenant avec le bouton Précédent/Suivant du navigateur).
-3. Cliquez « Supprimer » sur ce fichier et confirmez : il disparaît de la
-   liste **immédiatement**, sans rechargement.
-4. Sur un autre document, cliquez « Régénérer l'URL » et confirmez : la ligne
-   affiche immédiatement le nouveau QR code et la nouvelle URL (l'ancienne
-   renvoie désormais 404).
-5. Cliquez « Se déconnecter » : retour à l'écran de saisie du code ; rouvrir
-   « Mes documents » sans code redirige vers l'accueil.
+1. Connectez-vous, importez un document : il apparaît immédiatement en tête
+   de liste. Faites **F5** : il est toujours présent.
+2. Supprimez ce document et confirmez : il disparaît immédiatement.
+   Faites **F5** : il est toujours absent.
+3. Changez d'onglet (« Emails collectés ») puis revenez sur « Mes
+   documents » : la liste est re-demandée au serveur et reste à jour.
+4. Sur un document, « Régénérer l'URL » : la ligne affiche immédiatement le
+   nouveau QR code (l'ancienne URL renvoie désormais 404).
+5. « Se déconnecter » : retour à l'écran du code ; rouvrir « Mes documents »
+   sans code redirige vers l'accueil.
+
+Note visibilité : le sélecteur « Tous les documents » et l'onglet
+« Documents legacy » ne sont affichés que si **la réponse du serveur**
+indique `isAdmin` (le stockage local n'est qu'une indication de départ) ;
+côté serveur, le paramètre `scope` d'un non-admin est de toute façon ignoré.
 
 ## Déploiement
 

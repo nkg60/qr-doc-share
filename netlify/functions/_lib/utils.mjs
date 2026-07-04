@@ -10,7 +10,14 @@ import { getStore } from "@netlify/blobs";
 export function json(donnees, statut = 200) {
   return new Response(JSON.stringify(donnees), {
     status: statut,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      // Données vivantes (listes, quotas, scans…) : interdire toute mise en
+      // cache par le navigateur ou un intermédiaire. Sans ces en-têtes, le
+      // cache heuristique du navigateur peut resservir une liste périmée.
+      "Cache-Control": "no-store",
+      "Pragma": "no-cache",
+    },
   });
 }
 
