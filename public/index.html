@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importer un document — Partage par QR code</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="carte">
+    <h1>📄 Partage de documents par QR code</h1>
+
+    <!-- Étape 1 : saisie du code d'accès (vérifié uniquement côté serveur) -->
+    <section id="section-code">
+      <h2>Code d'accès</h2>
+      <p class="aide">Saisissez le code à 6 chiffres pour pouvoir importer un document.</p>
+      <form id="form-code">
+        <input type="text" id="champ-code" inputmode="numeric" pattern="[0-9]{6}"
+               maxlength="6" placeholder="••••••" autocomplete="one-time-code" required>
+        <button type="submit" id="btn-code">Valider</button>
+      </form>
+      <p id="msg-code" class="message" hidden></p>
+    </section>
+
+    <!-- Étape 2 : import du fichier (affichée après validation du code) -->
+    <section id="section-upload" hidden>
+      <h2>Importer un document</h2>
+      <p class="aide">Image, PDF ou tout autre fichier.</p>
+      <form id="form-upload">
+        <input type="file" id="champ-fichier" required>
+        <button type="submit" id="btn-upload">Importer et générer le QR code</button>
+      </form>
+      <p id="msg-upload" class="message" hidden></p>
+    </section>
+
+    <!-- Étape 3 : QR code généré -->
+    <section id="section-qr" hidden>
+      <h2>QR code du document</h2>
+      <p class="aide">Faites scanner ce QR code : il mène à la page de récupération du document.</p>
+      <div id="apercu-qr"></div>
+      <p id="url-publique" class="url"></p>
+      <div class="actions">
+        <button id="btn-telecharger-qr">Télécharger le QR (PNG)</button>
+        <button id="btn-copier-url">Copier l'URL</button>
+        <button id="btn-nouveau">Importer un autre document</button>
+      </div>
+      <p id="msg-qr" class="message" hidden></p>
+    </section>
+
+    <!-- Section admin : emails collectés (visible après validation du code) -->
+    <section id="section-scans" hidden>
+      <h2>Emails collectés</h2>
+      <div class="actions">
+        <button id="btn-charger-scans">Afficher la liste</button>
+        <button id="btn-export-csv">Exporter en CSV</button>
+      </div>
+      <div id="liste-scans"></div>
+      <p id="msg-scans" class="message" hidden></p>
+    </section>
+  </main>
+
+  <script src="/js/vendor/qrcode.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

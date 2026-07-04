@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Récupérer le document</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="carte">
+    <h1>📥 Récupérer le document</h1>
+
+    <!-- Formulaire email : seule information demandée au visiteur -->
+    <section id="section-email">
+      <p class="aide">Indiquez votre adresse email pour accéder au document.</p>
+      <form id="form-email">
+        <input type="email" id="champ-email" placeholder="vous@exemple.fr"
+               autocomplete="email" required>
+        <button type="submit" id="btn-email">Accéder au document</button>
+      </form>
+      <p id="msg-email" class="message" hidden></p>
+    </section>
+
+    <!-- Bouton de téléchargement affiché après enregistrement de l'email
+         (V1 : pas d'envoi d'email, téléchargement direct) -->
+    <section id="section-telechargement" hidden>
+      <p class="succes">✅ Merci ! Votre document est prêt.</p>
+      <p id="nom-document" class="aide"></p>
+      <a id="lien-telechargement" class="bouton-lien" download>Télécharger le document</a>
+    </section>
+  </main>
+
+  <script src="/js/landing.js"></script>
+</body>
+</html>

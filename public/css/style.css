@@ -1,0 +1,110 @@
+/* Style commun aux deux pages — volontairement simple, sans framework. */
+
+:root {
+  --bleu: #2563eb;
+  --bleu-fonce: #1d4ed8;
+  --gris-texte: #374151;
+  --gris-clair: #6b7280;
+  --fond: #f3f4f6;
+  --rouge: #dc2626;
+  --vert: #16a34a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: var(--fond);
+  color: var(--gris-texte);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.carte {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  width: 100%;
+  max-width: 540px;
+}
+
+h1 { font-size: 1.4rem; margin-top: 0; }
+h2 { font-size: 1.05rem; margin-bottom: 0.4rem; }
+
+section { margin-top: 1.5rem; }
+section:first-of-type { margin-top: 0.5rem; }
+
+.aide { color: var(--gris-clair); font-size: 0.9rem; margin-top: 0; }
+
+form { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+input[type="text"],
+input[type="email"] {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+/* Champ du code : chiffres espacés, centrés */
+#champ-code {
+  letter-spacing: 0.5em;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+input[type="file"] { flex: 1 1 100%; font-size: 0.95rem; }
+
+button, .bouton-lien {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--bleu);
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+button:hover, .bouton-lien:hover { background: var(--bleu-fonce); }
+button:disabled { opacity: 0.6; cursor: wait; }
+
+.actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.8rem; }
+
+/* Messages d'état */
+.message { font-size: 0.9rem; margin: 0.6rem 0 0; }
+.message.erreur { color: var(--rouge); }
+.message.ok { color: var(--vert); }
+.succes { color: var(--vert); font-weight: 600; }
+
+/* Aperçu du QR code */
+#apercu-qr { display: flex; justify-content: center; margin: 1rem 0; }
+#apercu-qr canvas { border: 1px solid #e5e7eb; border-radius: 8px; }
+
+.url {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+  background: var(--fond);
+  padding: 0.5rem 0.7rem;
+  border-radius: 6px;
+}
+
+/* Tableau des emails collectés */
+#liste-scans { overflow-x: auto; margin-top: 0.8rem; }
+#liste-scans table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+#liste-scans th, #liste-scans td {
+  border: 1px solid #e5e7eb;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  white-space: nowrap;
+}
+#liste-scans th { background: var(--fond); }
