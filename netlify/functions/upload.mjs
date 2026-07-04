@@ -46,12 +46,18 @@ export default async (requete) => {
   }
 
   if (totalExistant + taille > quota) {
-    const enMo = (n) => (n / (1024 * 1024)).toFixed(1);
+    // Formatage lisible, adapté à l'ordre de grandeur (octets, Ko ou Mo).
+    const lisible = (n) =>
+      n >= 1024 * 1024
+        ? `${(n / (1024 * 1024)).toFixed(1)} Mo`
+        : n >= 1024
+          ? `${(n / 1024).toFixed(1)} Ko`
+          : `${n} octets`;
     return json(
       {
         erreur:
-          `Quota de stockage dépassé : ${enMo(totalExistant)} Mo déjà utilisés ` +
-          `sur ${enMo(quota)} Mo. Ce fichier de ${enMo(taille)} Mo ne peut pas être accepté.`,
+          `Quota de stockage dépassé : ${lisible(totalExistant)} déjà utilisés ` +
+          `sur ${lisible(quota)}. Ce fichier de ${lisible(taille)} ne peut pas être accepté.`,
       },
       413
     );

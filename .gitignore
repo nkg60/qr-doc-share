@@ -6,3 +6,6 @@ node_modules/
 
 # Fichiers locaux générés par le CLI Netlify
 .netlify/
+
+# Artefact généré par netlify dev
+deno.lock
