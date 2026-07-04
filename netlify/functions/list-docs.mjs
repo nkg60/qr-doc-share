@@ -8,8 +8,7 @@
 //   - "legacy" (admin uniquement) : les documents sans propriétaire.
 // Pour un non-admin, le paramètre est ignoré : toujours "mine".
 
-import { getStore } from "@netlify/blobs";
-import { json, exigerUtilisateur } from "./_lib/utils.mjs";
+import { json, exigerUtilisateur, ouvrirStore } from "./_lib/utils.mjs";
 
 export default async (requete) => {
   if (requete.method !== "GET") {
@@ -23,8 +22,8 @@ export default async (requete) => {
   const demande = new URL(requete.url).searchParams.get("scope") || "mine";
   const scope = utilisateur.isAdmin && ["all", "legacy"].includes(demande) ? demande : "mine";
 
-  const docs = getStore("docs");
-  const scans = getStore("scans");
+  const docs = ouvrirStore("docs");
+  const scans = ouvrirStore("scans");
 
   // Nombre de scans par document : les clés du store "scans" sont préfixées
   // par le token du document ("token/horodatage-aléa"), il suffit de compter.

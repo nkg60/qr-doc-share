@@ -4,13 +4,13 @@
 // conservé : les entrées du store "scans" sont déplacées sous le nouveau
 // token et leur champ token est mis à jour.
 
-import { getStore } from "@netlify/blobs";
 import { randomBytes } from "node:crypto";
 import {
   json,
   exigerUtilisateur,
   exigerProprietaire,
   journaliserActionAdmin,
+  ouvrirStore,
 } from "./_lib/utils.mjs";
 
 export default async (requete) => {
@@ -32,7 +32,7 @@ export default async (requete) => {
     return json({ erreur: "Token manquant." }, 400);
   }
 
-  const docs = getStore("docs");
+  const docs = ouvrirStore("docs");
   const resultat = await docs.getWithMetadata(ancienToken, { type: "arrayBuffer" });
   if (!resultat) {
     return json({ erreur: "Document introuvable." }, 404);
@@ -54,7 +54,7 @@ export default async (requete) => {
 
   // 2. Déplacement des scans existants sous le nouveau préfixe, en mettant
   //    à jour leur champ token, pour ne pas perdre l'historique.
-  const scans = getStore("scans");
+  const scans = ouvrirStore("scans");
   const { blobs } = await scans.list({ prefix: `${ancienToken}/` });
   for (const blob of blobs) {
     const scan = await scans.get(blob.key, { type: "json" });

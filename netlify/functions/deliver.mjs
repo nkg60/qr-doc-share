@@ -6,9 +6,8 @@
 // instantané (nom du document, propriétaire) pour que l'historique reste
 // complet même si le document est renommé ou supprimé plus tard.
 
-import { getStore } from "@netlify/blobs";
 import { randomBytes } from "node:crypto";
-import { json } from "./_lib/utils.mjs";
+import { json, ouvrirStore } from "./_lib/utils.mjs";
 
 // Validation d'email volontairement simple : quelque chose @ quelque chose . quelque chose
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,7 +35,7 @@ export default async (requete) => {
   }
 
   // Le document doit exister : on vérifie ses métadonnées sans le télécharger.
-  const docs = getStore("docs");
+  const docs = ouvrirStore("docs");
   const meta = await docs.getMetadata(token);
   if (!meta) {
     return json({ erreur: "Document introuvable ou lien expiré." }, 404);
@@ -44,7 +43,7 @@ export default async (requete) => {
 
   // Enregistrement du scan. Clé : token/horodatage-aléa — le préfixe permet
   // de retrouver tous les scans d'un document (rotation, suppression).
-  const scans = getStore("scans");
+  const scans = ouvrirStore("scans");
   const cle = `${token}/${Date.now()}-${randomBytes(4).toString("hex")}`;
   await scans.setJSON(cle, {
     token,

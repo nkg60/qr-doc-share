@@ -5,6 +5,19 @@ import { timingSafeEqual, randomBytes } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 
 /**
+ * Ouvre un store Netlify Blobs en cohérence FORTE.
+ * Par défaut, Blobs est à cohérence éventuelle : après un set()/delete(),
+ * une lecture (list, getMetadata…) peut resservir l'ancien état pendant
+ * jusqu'à une minute via le cache de bordure. Conséquence visible : un
+ * document importé ou supprimé n'apparaissait/ne disparaissait pas
+ * immédiatement de la liste en production. consistency: "strong" garantit
+ * de lire la dernière écriture (léger surcoût de latence, assumé).
+ */
+export function ouvrirStore(nom) {
+  return getStore({ name: nom, consistency: "strong" });
+}
+
+/**
  * Construit une réponse JSON avec le bon en-tête.
  */
 export function json(donnees, statut = 200) {
@@ -143,7 +156,7 @@ export function exigerProprietaire(utilisateur, metadonneesDoc) {
  */
 export async function journaliserActionAdmin(utilisateur, action, token, metadonneesDoc) {
   if (metadonneesDoc?.owner_code === utilisateur.code) return; // action sur son propre document : rien à tracer
-  const journal = getStore("admin_actions");
+  const journal = ouvrirStore("admin_actions");
   const cle = `${Date.now()}-${randomBytes(4).toString("hex")}`;
   await journal.setJSON(cle, {
     timestamp: new Date().toISOString(),

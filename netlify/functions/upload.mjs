@@ -2,9 +2,8 @@
 // l'utilisateur (somme des tailles de SES documents contre son max_bytes),
 // puis l'enregistre dans le store "docs" avec son propriétaire.
 
-import { getStore } from "@netlify/blobs";
 import { randomBytes } from "node:crypto";
-import { json, exigerUtilisateur, tailleLisible } from "./_lib/utils.mjs";
+import { json, exigerUtilisateur, tailleLisible, ouvrirStore } from "./_lib/utils.mjs";
 
 export default async (requete) => {
   if (requete.method !== "POST") {
@@ -29,7 +28,7 @@ export default async (requete) => {
     return json({ erreur: "Fichier vide ou manquant." }, 400);
   }
 
-  const docs = getStore("docs");
+  const docs = ouvrirStore("docs");
 
   // --- Vérification du quota individuel --------------------------------
   // On additionne la taille des seuls documents dont owner_code est le code

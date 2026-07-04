@@ -5,8 +5,7 @@
 // - GET  /.netlify/functions/scans            -> liste JSON
 // - GET  /.netlify/functions/scans?format=csv -> export CSV
 
-import { getStore } from "@netlify/blobs";
-import { json, exigerUtilisateur } from "./_lib/utils.mjs";
+import { json, exigerUtilisateur, ouvrirStore } from "./_lib/utils.mjs";
 
 // Échappe une valeur pour une cellule CSV (guillemets doublés, cellule citée).
 function celluleCsv(valeur) {
@@ -21,8 +20,8 @@ export default async (requete) => {
   const { utilisateur, erreur } = exigerUtilisateur(requete);
   if (erreur) return erreur;
 
-  const scans = getStore("scans");
-  const docs = getStore("docs");
+  const scans = ouvrirStore("scans");
+  const docs = ouvrirStore("docs");
   const { blobs } = await scans.list();
 
   // Cache des métadonnées de documents, pour ne pas relire N fois le même.

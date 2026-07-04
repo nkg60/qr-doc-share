@@ -2,12 +2,12 @@
 // métadonnées). Les scans déjà collectés sont CONSERVÉS mais marqués
 // orphelins (document_deleted = true) pour garder la trace des emails.
 
-import { getStore } from "@netlify/blobs";
 import {
   json,
   exigerUtilisateur,
   exigerProprietaire,
   journaliserActionAdmin,
+  ouvrirStore,
 } from "./_lib/utils.mjs";
 
 export default async (requete) => {
@@ -29,7 +29,7 @@ export default async (requete) => {
     return json({ erreur: "Token manquant." }, 400);
   }
 
-  const docs = getStore("docs");
+  const docs = ouvrirStore("docs");
   const meta = await docs.getMetadata(token);
   if (!meta) {
     return json({ erreur: "Document introuvable." }, 404);
@@ -47,7 +47,7 @@ export default async (requete) => {
   await docs.delete(token);
 
   // Les scans restent, marqués orphelins : l'export CSV garde la trace.
-  const scans = getStore("scans");
+  const scans = ouvrirStore("scans");
   const { blobs } = await scans.list({ prefix: `${token}/` });
   for (const blob of blobs) {
     const scan = await scans.get(blob.key, { type: "json" });

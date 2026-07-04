@@ -1,8 +1,7 @@
 // Fonction "download" : sert le fichier stocké dans le store "docs".
 // Grâce à "config.path", elle répond directement sur l'URL /download/{token}.
 
-import { getStore } from "@netlify/blobs";
-import { json } from "./_lib/utils.mjs";
+import { json, ouvrirStore } from "./_lib/utils.mjs";
 
 export default async (requete, contexte) => {
   if (requete.method !== "GET") {
@@ -21,7 +20,7 @@ export default async (requete, contexte) => {
     return json({ erreur: "Document introuvable ou lien expiré." }, 404);
   }
 
-  const docs = getStore("docs");
+  const docs = ouvrirStore("docs");
   // Récupération du contenu (en flux) et des métadonnées en un seul appel.
   const resultat = await docs.getWithMetadata(token, { type: "stream" });
   if (!resultat) {
