@@ -91,6 +91,24 @@ npm run dev            # lance netlify dev sur http://localhost:8888
 
 `netlify dev` émule les fonctions, les redirections et Netlify Blobs en local.
 
+### Test manuel : fraîcheur de la liste « Mes documents »
+
+La liste est toujours re-fetchée depuis le serveur (une seule source de
+vérité) : au chargement de la page, après une suppression, après une rotation
+d'URL, et quand le navigateur restaure la page depuis son cache arrière/avant.
+Pour vérifier :
+
+1. Connectez-vous avec votre code, importez un fichier depuis la page d'accueil.
+2. Ouvrez « Mes documents » : le fichier apparaît **sans recharger** la page
+   (y compris en revenant avec le bouton Précédent/Suivant du navigateur).
+3. Cliquez « Supprimer » sur ce fichier et confirmez : il disparaît de la
+   liste **immédiatement**, sans rechargement.
+4. Sur un autre document, cliquez « Régénérer l'URL » et confirmez : la ligne
+   affiche immédiatement le nouveau QR code et la nouvelle URL (l'ancienne
+   renvoie désormais 404).
+5. Cliquez « Se déconnecter » : retour à l'écran de saisie du code ; rouvrir
+   « Mes documents » sans code redirige vers l'accueil.
+
 ## Déploiement
 
 1. Connectez le CLI si nécessaire : `npx netlify login`.

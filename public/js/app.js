@@ -62,6 +62,31 @@ function afficherEspaceImport() {
   barreConnexion.hidden = false;
 }
 
+/** Déconnexion : efface tout l'état côté client et revient à l'écran du code. */
+function seDeconnecter() {
+  sessionStorage.removeItem("codeAcces");
+  sessionStorage.removeItem("labelUtilisateur");
+  sessionStorage.removeItem("isAdmin");
+  codeAcces = "";
+  monLabel = "";
+  suisAdmin = false;
+  scansCharges = [];
+
+  // Retour à l'état initial de la page.
+  barreConnexion.hidden = true;
+  sectionUpload.hidden = true;
+  sectionQr.hidden = true;
+  sectionScans.hidden = true;
+  listeScans.innerHTML = "";
+  afficherMessage(msgScans, "", "");
+  formCode.reset();
+  formUpload.reset();
+  sectionCode.hidden = false;
+  champCode.focus();
+}
+
+document.getElementById("btn-deconnexion").addEventListener("click", seDeconnecter);
+
 // Si un code a déjà été validé dans cette session, on ré-affiche directement
 // l'espace d'import (le serveur re-vérifiera le code à chaque appel de toute façon).
 if (codeAcces) afficherEspaceImport();

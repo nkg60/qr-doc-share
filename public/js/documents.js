@@ -27,6 +27,14 @@ const msgQr = document.getElementById("msg-qr");
 const codeAcces = sessionStorage.getItem("codeAcces") || "";
 if (!codeAcces) location.href = "/";
 
+// Déconnexion : efface tout l'état côté client et revient à l'écran du code.
+document.getElementById("btn-deconnexion").addEventListener("click", () => {
+  sessionStorage.removeItem("codeAcces");
+  sessionStorage.removeItem("labelUtilisateur");
+  sessionStorage.removeItem("isAdmin");
+  location.href = "/";
+});
+
 /** Affiche un message d'état. */
 function afficherMessage(element, texte, type) {
   element.textContent = texte;
@@ -223,3 +231,12 @@ async function chargerDocuments() {
 }
 
 chargerDocuments();
+
+// La liste est TOUJOURS re-fetchée depuis le serveur (une seule source de
+// vérité) : au chargement, après suppression et après rotation. Reste le cas
+// du bfcache : si le navigateur restaure cette page depuis son cache
+// arrière/avant (retour après un upload sur la page d'import, par exemple),
+// les scripts ne sont pas relancés — on re-fetch alors explicitement.
+window.addEventListener("pageshow", (evenement) => {
+  if (evenement.persisted) chargerDocuments();
+});

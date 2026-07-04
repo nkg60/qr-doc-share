@@ -36,9 +36,19 @@ body {
 /* Variante plus large pour la page « Mes documents » (tableau + actions) */
 .carte-large { max-width: 860px; }
 
-/* Barre de connexion : label de l'utilisateur + navigation */
-.barre-connexion { font-size: 0.9rem; color: var(--gris-clair); }
+/* Barre de connexion : navigation à gauche, identité + déconnexion à droite */
+.barre-connexion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: var(--gris-clair);
+  margin: 0.3rem 0 0.8rem;
+}
 .barre-connexion a { color: var(--bleu); }
+.barre-connexion .identite { display: inline-flex; align-items: center; gap: 0.4rem; }
 
 /* Badge « admin » à côté du label */
 .badge {

@@ -9,11 +9,15 @@
 <body>
   <main class="carte carte-large">
     <h1>🗂️ Mes documents</h1>
-    <p class="barre-connexion">
-      Connecté : <strong id="label-utilisateur"></strong>
-      <span id="badge-admin" class="badge" hidden>admin</span>
-      — <a href="/">← Retour à l'import</a>
-    </p>
+    <!-- Barre de connexion : navigation à gauche, identité + déconnexion à droite -->
+    <div class="barre-connexion">
+      <a href="/">← Retour à l'import</a>
+      <span class="identite">
+        Connecté en tant que <strong id="label-utilisateur"></strong>
+        <span id="badge-admin" class="badge" hidden>admin</span>
+        — <button id="btn-deconnexion" class="petit secondaire">Se déconnecter</button>
+      </span>
+    </div>
 
     <!-- Documents de l'utilisateur connecté -->
     <section id="section-documents">

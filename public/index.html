@@ -10,12 +10,15 @@
   <main class="carte">
     <h1>📄 Partage de documents par QR code</h1>
 
-    <!-- Barre de connexion : label de l'utilisateur + lien vers ses documents -->
-    <p id="barre-connexion" class="barre-connexion" hidden>
-      Connecté : <strong id="label-utilisateur"></strong>
-      <span id="badge-admin" class="badge" hidden>admin</span>
-      — <a href="/mes-documents.html">Mes documents</a>
-    </p>
+    <!-- Barre de connexion : navigation à gauche, identité + déconnexion à droite -->
+    <div id="barre-connexion" class="barre-connexion" hidden>
+      <a href="/mes-documents.html">Mes documents</a>
+      <span class="identite">
+        Connecté en tant que <strong id="label-utilisateur"></strong>
+        <span id="badge-admin" class="badge" hidden>admin</span>
+        — <button id="btn-deconnexion" class="petit secondaire">Se déconnecter</button>
+      </span>
+    </div>
 
     <!-- Étape 1 : saisie du code d'accès (vérifié uniquement côté serveur) -->
     <section id="section-code">
