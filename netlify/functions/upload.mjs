@@ -1,24 +1,21 @@
-// Fonction "upload" : reçoit un fichier, vérifie le quota global de stockage,
-// puis l'enregistre dans le store Netlify Blobs "docs" sous un token
-// aléatoire non devinable. Renvoie l'URL publique /d/{token}.
+// Fonction "upload" : reçoit un fichier, vérifie le quota INDIVIDUEL de
+// l'utilisateur (somme des tailles de SES documents contre son max_bytes),
+// puis l'enregistre dans le store "docs" avec son propriétaire.
 
 import { getStore } from "@netlify/blobs";
 import { randomBytes } from "node:crypto";
-import { json, exigerCode } from "./_lib/utils.mjs";
-
-// Quota par défaut si MAX_TOTAL_BYTES n'est pas défini : 100 Mo.
-const QUOTA_PAR_DEFAUT = 100 * 1024 * 1024;
+import { json, exigerUtilisateur, tailleLisible } from "./_lib/utils.mjs";
 
 export default async (requete) => {
   if (requete.method !== "POST") {
     return json({ erreur: "Méthode non autorisée." }, 405);
   }
 
-  // L'upload est lui aussi protégé par le code d'accès (défense côté serveur :
-  // valider le code une fois sur la page ne suffirait pas, un attaquant
-  // pourrait appeler cette fonction directement).
-  const refus = exigerCode(requete);
-  if (refus) return refus;
+  // L'upload est protégé par le code d'accès (défense côté serveur : valider
+  // le code une fois sur la page ne suffirait pas, un attaquant pourrait
+  // appeler cette fonction directement).
+  const { utilisateur, erreur } = exigerUtilisateur(requete);
+  if (erreur) return erreur;
 
   // Nom de fichier d'origine, transmis encodé dans un en-tête.
   const nomBrut = requete.headers.get("x-file-name") || "document";
@@ -34,30 +31,25 @@ export default async (requete) => {
 
   const docs = getStore("docs");
 
-  // --- Vérification du quota global -----------------------------------
-  // On additionne la taille (stockée en métadonnée) de tous les fichiers
-  // déjà présents dans le store "docs".
-  const quota = Number(process.env.MAX_TOTAL_BYTES) || QUOTA_PAR_DEFAUT;
-  let totalExistant = 0;
+  // --- Vérification du quota individuel --------------------------------
+  // On additionne la taille des seuls documents dont owner_code est le code
+  // de l'appelant, et on compare à SON max_bytes.
+  let totalUtilise = 0;
   const { blobs } = await docs.list();
   for (const blob of blobs) {
     const meta = await docs.getMetadata(blob.key);
-    totalExistant += Number(meta?.metadata?.taille) || 0;
+    if (meta?.metadata?.owner_code === utilisateur.code) {
+      totalUtilise += Number(meta.metadata.taille) || 0;
+    }
   }
 
-  if (totalExistant + taille > quota) {
-    // Formatage lisible, adapté à l'ordre de grandeur (octets, Ko ou Mo).
-    const lisible = (n) =>
-      n >= 1024 * 1024
-        ? `${(n / (1024 * 1024)).toFixed(1)} Mo`
-        : n >= 1024
-          ? `${(n / 1024).toFixed(1)} Ko`
-          : `${n} octets`;
+  if (totalUtilise + taille > utilisateur.maxBytes) {
     return json(
       {
         erreur:
-          `Quota de stockage dépassé : ${lisible(totalExistant)} déjà utilisés ` +
-          `sur ${lisible(quota)}. Ce fichier de ${lisible(taille)} ne peut pas être accepté.`,
+          `Quota dépassé pour ${utilisateur.label} : ${tailleLisible(totalUtilise)} ` +
+          `utilisés sur ${tailleLisible(utilisateur.maxBytes)}. ` +
+          `Ce fichier fait ${tailleLisible(taille)}.`,
       },
       413
     );
@@ -69,10 +61,12 @@ export default async (requete) => {
 
   await docs.set(token, contenu, {
     metadata: {
-      nom,                            // nom de fichier d'origine
-      taille,                         // taille en octets
-      date: new Date().toISOString(), // date d'import
-      type: typeMime,                 // type MIME, réutilisé au téléchargement
+      nom,                             // nom de fichier d'origine
+      taille,                          // taille en octets
+      date: new Date().toISOString(),  // date d'import
+      type: typeMime,                  // type MIME, réutilisé au téléchargement
+      owner_code: utilisateur.code,    // propriétaire du document
+      owner_label: utilisateur.label,  // label figé au moment de l'upload
     },
   });
 

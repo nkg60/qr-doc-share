@@ -1,8 +1,8 @@
 // Fonction "auth" : vérifie le code d'accès à 6 chiffres.
-// Le code n'est jamais présent dans le frontend : il est comparé ici,
-// côté serveur, à la variable d'environnement ACCESS_CODE.
+// Le dictionnaire ACCESS_CODES n'est jamais envoyé au frontend : la
+// comparaison se fait ici, côté serveur, en temps constant.
 
-import { json, codeValide } from "./_lib/utils.mjs";
+import { json, verifierCode } from "./_lib/utils.mjs";
 
 export default async (requete) => {
   if (requete.method !== "POST") {
@@ -16,7 +16,16 @@ export default async (requete) => {
     return json({ erreur: "Corps de requête invalide." }, 400);
   }
 
-  const valide = codeValide(String(corps.code ?? ""));
-  // On répond simplement valide/invalide, sans jamais renvoyer le code attendu.
-  return json({ valide });
+  const utilisateur = verifierCode(String(corps.code ?? ""));
+  if (!utilisateur) {
+    return json({ valide: false });
+  }
+
+  // On ne renvoie que ce dont l'interface a besoin : jamais les codes,
+  // jamais les quotas des autres utilisateurs.
+  return json({
+    valide: true,
+    label: utilisateur.label,
+    isAdmin: utilisateur.isAdmin,
+  });
 };

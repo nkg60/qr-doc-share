@@ -1,10 +1,12 @@
 // Fonction "scans" : consultation et export des emails collectés.
 // Protégée par le code d'accès (en-tête X-Access-Code).
+// Visibilité : un utilisateur ne voit que les scans de SES documents ;
+// un admin voit tout (y compris les documents legacy et supprimés).
 // - GET  /.netlify/functions/scans            -> liste JSON
 // - GET  /.netlify/functions/scans?format=csv -> export CSV
 
 import { getStore } from "@netlify/blobs";
-import { json, exigerCode } from "./_lib/utils.mjs";
+import { json, exigerUtilisateur } from "./_lib/utils.mjs";
 
 // Échappe une valeur pour une cellule CSV (guillemets doublés, cellule citée).
 function celluleCsv(valeur) {
@@ -16,26 +18,47 @@ export default async (requete) => {
     return json({ erreur: "Méthode non autorisée." }, 405);
   }
 
-  const refus = exigerCode(requete);
-  if (refus) return refus;
+  const { utilisateur, erreur } = exigerUtilisateur(requete);
+  if (erreur) return erreur;
 
   const scans = getStore("scans");
   const docs = getStore("docs");
   const { blobs } = await scans.list();
 
-  // Lecture de chaque enregistrement de scan.
+  // Cache des métadonnées de documents, pour ne pas relire N fois le même.
+  const cacheMetaDocs = new Map();
+  async function metaDoc(token) {
+    if (!cacheMetaDocs.has(token)) {
+      cacheMetaDocs.set(token, (await docs.getMetadata(token))?.metadata || null);
+    }
+    return cacheMetaDocs.get(token);
+  }
+
   const lignes = [];
   for (const blob of blobs) {
     const scan = await scans.get(blob.key, { type: "json" });
     if (!scan) continue;
-    // On enrichit avec le nom du document, si celui-ci existe encore.
-    const metaDoc = await docs.getMetadata(scan.token);
+
+    // Instantané enregistré au moment du scan (V1.1) ; pour les scans V1
+    // qui n'en ont pas, on retombe sur les métadonnées du document s'il
+    // existe encore.
+    const meta = scan.nomDocument ? null : await metaDoc(scan.token);
+    const proprietaireCode = scan.ownerCode ?? meta?.owner_code ?? null;
+    const proprietaireLabel =
+      scan.ownerLabel ?? meta?.owner_label ?? (proprietaireCode ? null : "legacy");
+    const nomDocument = scan.nomDocument ?? meta?.nom ?? "(inconnu)";
+
+    // Visibilité : un non-admin ne voit que les scans de ses propres documents.
+    if (!utilisateur.isAdmin && proprietaireCode !== utilisateur.code) continue;
+
     lignes.push({
       token: scan.token,
-      document: metaDoc?.metadata?.nom || "(supprimé)",
+      proprietaire: proprietaireLabel || "legacy",
+      document: nomDocument,
       email: scan.email,
       date: scan.date,
       userAgent: scan.userAgent,
+      documentSupprime: scan.document_deleted === true,
     });
   }
 
@@ -44,11 +67,13 @@ export default async (requete) => {
 
   const url = new URL(requete.url);
   if (url.searchParams.get("format") === "csv") {
-    const entete = ["token", "document", "email", "date", "user_agent"];
+    const entete = ["token", "proprietaire", "document", "email", "date", "user_agent", "document_supprime"];
     const csv = [
       entete.join(";"),
       ...lignes.map((l) =>
-        [l.token, l.document, l.email, l.date, l.userAgent].map(celluleCsv).join(";")
+        [l.token, l.proprietaire, l.document, l.email, l.date, l.userAgent, l.documentSupprime ? "oui" : "non"]
+          .map(celluleCsv)
+          .join(";")
       ),
     ].join("\r\n");
 
@@ -62,5 +87,5 @@ export default async (requete) => {
     });
   }
 
-  return json({ total: lignes.length, scans: lignes });
+  return json({ total: lignes.length, isAdmin: utilisateur.isAdmin, scans: lignes });
 };

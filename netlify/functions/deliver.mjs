@@ -1,7 +1,10 @@
 // Fonction "deliver" : appelée depuis la page publique /d/{token}.
-// Enregistre l'email du visiteur (+ date + user-agent) dans le store "scans",
-// puis renvoie l'URL de téléchargement du document.
-// V1 : aucun envoi d'email — le téléchargement est proposé directement.
+// VOLONTAIREMENT accessible sans code d'accès : la personne qui scanne le
+// QR code ne connaît aucun code. Le token 128 bits non devinable est la
+// seule "clé" du document.
+// Enregistre l'email du visiteur dans le store "scans", enrichi d'un
+// instantané (nom du document, propriétaire) pour que l'historique reste
+// complet même si le document est renommé ou supprimé plus tard.
 
 import { getStore } from "@netlify/blobs";
 import { randomBytes } from "node:crypto";
@@ -39,8 +42,8 @@ export default async (requete) => {
     return json({ erreur: "Document introuvable ou lien expiré." }, 404);
   }
 
-  // Enregistrement du scan. Clé unique : token/horodatage-aléa, ce qui permet
-  // de conserver plusieurs emails pour un même document.
+  // Enregistrement du scan. Clé : token/horodatage-aléa — le préfixe permet
+  // de retrouver tous les scans d'un document (rotation, suppression).
   const scans = getStore("scans");
   const cle = `${token}/${Date.now()}-${randomBytes(4).toString("hex")}`;
   await scans.setJSON(cle, {
@@ -48,6 +51,10 @@ export default async (requete) => {
     email,
     date: new Date().toISOString(),
     userAgent: requete.headers.get("user-agent") || "",
+    // Instantané au moment du scan (survit à la suppression du document) :
+    nomDocument: meta.metadata?.nom || "document",
+    ownerCode: meta.metadata?.owner_code || null,
+    ownerLabel: meta.metadata?.owner_label || null,
   });
 
   // V1 : pas d'envoi d'email, on renvoie directement le lien de téléchargement.
