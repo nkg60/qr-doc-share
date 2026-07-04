@@ -1,0 +1,26 @@
+{
+  "name": "qr-doc-share",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nkg60/qr-doc-share.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nkg60/qr-doc-share/issues"
+  },
+  "homepage": "https://github.com/nkg60/qr-doc-share#readme",
+  "dependencies": {
+    "@netlify/blobs": "^10.7.9"
+  },
+  "devDependencies": {
+    "netlify-cli": "^26.1.0"
+  }
+}

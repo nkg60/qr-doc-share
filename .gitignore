@@ -1,0 +1,8 @@
+# Dépendances
+node_modules/
+
+# Variables d'environnement locales (contient le code d'accès : ne jamais versionner)
+.env
+
+# Fichiers locaux générés par le CLI Netlify
+.netlify/

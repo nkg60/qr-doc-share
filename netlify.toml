@@ -1,0 +1,14 @@
+# Configuration Netlify du projet "Partage de documents par QR code"
+
+[build]
+  # Dossier publié (frontend statique, sans build)
+  publish = "public"
+  # Dossier contenant les Netlify Functions
+  functions = "netlify/functions"
+
+# Les URL publiques /d/{token} sont servies par la page statique d.html
+# (le token est lu côté client depuis l'URL). Statut 200 = réécriture, pas une redirection.
+[[redirects]]
+  from = "/d/*"
+  to = "/d.html"
+  status = 200
