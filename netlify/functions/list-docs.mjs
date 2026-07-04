@@ -36,9 +36,16 @@ export default async (requete) => {
   }
 
   const documents = [];
+  // Quota de l'appelant : total de SES documents, quel que soit le scope
+  // affiché (permet au frontend d'indiquer « Quota restant : X Mo »).
+  let quotaUtilise = 0;
   const { blobs } = await docs.list();
   for (const blob of blobs) {
     const meta = (await docs.getMetadata(blob.key))?.metadata || {};
+
+    if (meta.owner_code === utilisateur.code) {
+      quotaUtilise += Number(meta.taille) || 0;
+    }
 
     // Filtrage selon le scope, toujours côté serveur.
     if (scope === "mine" && meta.owner_code !== utilisateur.code) continue;
@@ -63,5 +70,7 @@ export default async (requete) => {
     scope,
     isAdmin: utilisateur.isAdmin,
     label: utilisateur.label,
+    // Uniquement le quota de l'appelant, jamais celui des autres.
+    quota: { maxBytes: utilisateur.maxBytes, utilise: quotaUtilise },
   });
 };
