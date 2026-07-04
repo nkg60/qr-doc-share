@@ -6,7 +6,12 @@
 
 import { getStore } from "@netlify/blobs";
 import { randomBytes } from "node:crypto";
-import { json, exigerUtilisateur, exigerProprietaire } from "./_lib/utils.mjs";
+import {
+  json,
+  exigerUtilisateur,
+  exigerProprietaire,
+  journaliserActionAdmin,
+} from "./_lib/utils.mjs";
 
 export default async (requete) => {
   if (requete.method !== "POST") {
@@ -36,6 +41,10 @@ export default async (requete) => {
   // Seul le propriétaire (ou un admin) peut faire tourner le token.
   const refus = exigerProprietaire(utilisateur, resultat.metadata);
   if (refus) return refus;
+
+  // Traçabilité : une rotation par un admin d'un document qui n'est pas
+  // le sien est journalisée dans le store "admin_actions".
+  await journaliserActionAdmin(utilisateur, "rotate", ancienToken, resultat.metadata);
 
   // Nouveau token aléatoire non devinable (128 bits).
   const nouveauToken = randomBytes(16).toString("base64url");

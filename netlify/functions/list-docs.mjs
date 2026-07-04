@@ -1,7 +1,12 @@
-// Fonction "list-docs" : liste les documents de l'utilisateur connecté
-// (page « Mes documents »), avec le nombre de scans de chacun.
-// Pour un admin, renvoie aussi les documents "legacy" (sans propriétaire,
-// importés avant la V1.1) dans une liste séparée.
+// Fonction "list-docs" : liste des documents pour la page « Mes documents »,
+// avec le nombre de scans de chacun.
+//
+// Paramètre ?scope= (appliqué CÔTÉ SERVEUR — défense en profondeur, on ne se
+// repose pas sur le frontend pour filtrer) :
+//   - "mine"   (défaut) : les documents dont l'appelant est propriétaire ;
+//   - "all"    (admin uniquement) : TOUS les documents, legacy inclus ;
+//   - "legacy" (admin uniquement) : les documents sans propriétaire.
+// Pour un non-admin, le paramètre est ignoré : toujours "mine".
 
 import { getStore } from "@netlify/blobs";
 import { json, exigerUtilisateur } from "./_lib/utils.mjs";
@@ -13,6 +18,10 @@ export default async (requete) => {
 
   const { utilisateur, erreur } = exigerUtilisateur(requete);
   if (erreur) return erreur;
+
+  // Le scope demandé n'est honoré que pour un admin.
+  const demande = new URL(requete.url).searchParams.get("scope") || "mine";
+  const scope = utilisateur.isAdmin && ["all", "legacy"].includes(demande) ? demande : "mine";
 
   const docs = getStore("docs");
   const scans = getStore("scans");
@@ -26,38 +35,32 @@ export default async (requete) => {
     compteScans[token] = (compteScans[token] || 0) + 1;
   }
 
-  const miens = [];
-  const legacy = [];
+  const documents = [];
   const { blobs } = await docs.list();
   for (const blob of blobs) {
     const meta = (await docs.getMetadata(blob.key))?.metadata || {};
-    const doc = {
+
+    // Filtrage selon le scope, toujours côté serveur.
+    if (scope === "mine" && meta.owner_code !== utilisateur.code) continue;
+    if (scope === "legacy" && meta.owner_code) continue;
+    // scope === "all" : aucun filtre (admin vérifié plus haut).
+
+    documents.push({
       token: blob.key,
       nom: meta.nom || "document",
       taille: Number(meta.taille) || 0,
       date: meta.date || null,
-      proprietaire: meta.owner_label || null,
+      proprietaire: meta.owner_label || null, // null = document legacy
       nbScans: compteScans[blob.key] || 0,
-    };
-
-    if (!meta.owner_code) {
-      // Document importé avant la V1.1 : visible uniquement des admins,
-      // dans un onglet à part, pour décider quoi en faire.
-      if (utilisateur.isAdmin) legacy.push(doc);
-    } else if (meta.owner_code === utilisateur.code) {
-      miens.push(doc);
-    }
-    // Les documents des autres utilisateurs ne sont jamais renvoyés ici.
+    });
   }
 
   // Du plus récent au plus ancien.
-  const parDateDesc = (a, b) => ((a.date || "") < (b.date || "") ? 1 : -1);
-  miens.sort(parDateDesc);
-  legacy.sort(parDateDesc);
+  documents.sort((a, b) => ((a.date || "") < (b.date || "") ? 1 : -1));
 
   return json({
-    documents: miens,
-    legacy: utilisateur.isAdmin ? legacy : [],
+    documents,
+    scope,
     isAdmin: utilisateur.isAdmin,
     label: utilisateur.label,
   });

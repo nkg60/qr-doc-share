@@ -124,6 +124,22 @@ select {
 
 .cellule-actions { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 
+/* Onglets de la page Mes documents (vue admin : mine / all / legacy) */
+.onglets {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.8rem;
+}
+button.onglet {
+  background: #e5e7eb;
+  color: var(--gris-texte);
+  font-size: 0.85rem;
+  padding: 0.45rem 0.8rem;
+}
+button.onglet:hover { background: #d1d5db; }
+button.onglet.actif { background: var(--bleu); color: #fff; }
+
 .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.8rem; }
 
 /* Messages d'état */

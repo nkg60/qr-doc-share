@@ -3,7 +3,12 @@
 // orphelins (document_deleted = true) pour garder la trace des emails.
 
 import { getStore } from "@netlify/blobs";
-import { json, exigerUtilisateur, exigerProprietaire } from "./_lib/utils.mjs";
+import {
+  json,
+  exigerUtilisateur,
+  exigerProprietaire,
+  journaliserActionAdmin,
+} from "./_lib/utils.mjs";
 
 export default async (requete) => {
   if (requete.method !== "POST") {
@@ -33,6 +38,10 @@ export default async (requete) => {
   // Seul le propriétaire (ou un admin) peut supprimer.
   const refus = exigerProprietaire(utilisateur, meta.metadata);
   if (refus) return refus;
+
+  // Traçabilité : une suppression par un admin d'un document qui n'est pas
+  // le sien est journalisée dans le store "admin_actions".
+  await journaliserActionAdmin(utilisateur, "delete", token, meta.metadata);
 
   // Suppression du document lui-même.
   await docs.delete(token);

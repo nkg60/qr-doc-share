@@ -1,17 +1,19 @@
 // Logique de la page « Mes documents » (mes-documents.html).
-// Liste les documents de l'utilisateur connecté, avec trois actions :
+// Liste les documents de la vue courante, avec trois actions par document :
 //   1. Voir / re-télécharger le QR code (le token ne change pas — tout se
 //      fait côté client à partir du token renvoyé par list-docs) ;
 //   2. Régénérer l'URL (rotation du token, avec confirmation) ;
 //   3. Supprimer le document (avec confirmation, scans conservés).
-// Un admin voit aussi les documents "legacy" (sans propriétaire) à part.
+// Un admin dispose d'un sélecteur de vue : Mes documents / Tous les
+// documents / Documents legacy. Le filtrage est fait CÔTÉ SERVEUR (paramètre
+// scope de list-docs) ; les boutons ne font que choisir la vue.
 
 const labelUtilisateur = document.getElementById("label-utilisateur");
 const badgeAdmin = document.getElementById("badge-admin");
+const onglets = document.getElementById("onglets");
+const aideScope = document.getElementById("aide-scope");
 const listeDocuments = document.getElementById("liste-documents");
 const msgDocuments = document.getElementById("msg-documents");
-const sectionLegacy = document.getElementById("section-legacy");
-const listeLegacy = document.getElementById("liste-legacy");
 
 const sectionQr = document.getElementById("section-qr");
 const titreQr = document.getElementById("titre-qr");
@@ -35,6 +37,16 @@ document.getElementById("btn-deconnexion").addEventListener("click", () => {
   location.href = "/";
 });
 
+// Vue courante : "mine" (défaut), "all" ou "legacy" (admin uniquement).
+let scopeCourant = "mine";
+
+// Description affichée sous les onglets, par vue.
+const AIDE_PAR_SCOPE = {
+  mine: "",
+  all: "Tous les documents, tous propriétaires confondus (documents legacy inclus).",
+  legacy: "Documents importés avant le multi-utilisateurs, sans propriétaire. À vous de décider quoi en faire.",
+};
+
 /** Affiche un message d'état. */
 function afficherMessage(element, texte, type) {
   element.textContent = texte;
@@ -47,6 +59,19 @@ function tailleLisible(n) {
   if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + " Mo";
   if (n >= 1024) return (n / 1024).toFixed(1) + " Ko";
   return n + " octets";
+}
+
+// --- Sélecteur de vue (admin) --------------------------------------------------
+
+for (const bouton of onglets.querySelectorAll("button[data-scope]")) {
+  bouton.addEventListener("click", () => {
+    scopeCourant = bouton.dataset.scope;
+    for (const b of onglets.querySelectorAll("button")) {
+      b.classList.toggle("actif", b === bouton);
+    }
+    sectionQr.hidden = true;
+    chargerDocuments();
+  });
 }
 
 // --- Affichage du QR code d'un document ---------------------------------------
@@ -114,8 +139,9 @@ async function regenererUrl(doc) {
 
   try {
     const donnees = await appelerFonction("rotate-token", { token: doc.token });
+    // Re-fetch immédiat : la ligne du document affiche le nouveau token.
     await chargerDocuments();
-    // On affiche immédiatement le nouveau QR code.
+    // Et on montre tout de suite le nouveau QR code.
     await afficherQr({ token: donnees.token, nom: doc.nom });
     afficherMessage(msgQr, "Nouvelle URL générée. L'ancienne est désactivée.", "ok");
   } catch (erreur) {
@@ -134,6 +160,7 @@ async function supprimerDocument(doc) {
   try {
     await appelerFonction("delete-doc", { token: doc.token });
     sectionQr.hidden = true;
+    // Re-fetch immédiat : le document disparaît de la liste.
     await chargerDocuments();
     afficherMessage(msgDocuments, `« ${doc.nom} » supprimé.`, "ok");
   } catch (erreur) {
@@ -143,11 +170,15 @@ async function supprimerDocument(doc) {
 
 // --- Construction du tableau ------------------------------------------------------
 
-/** Construit le tableau d'une liste de documents (les miens, ou les legacy). */
-function construireTableau(documents) {
+/** Construit le tableau des documents. Hors vue « Mes documents », une colonne
+    Propriétaire est ajoutée (« — (legacy) » pour un document sans propriétaire). */
+function construireTableau(documents, avecProprietaire) {
   const table = document.createElement("table");
+  const colonnes = avecProprietaire
+    ? ["Nom", "Propriétaire", "Taille", "Date", "Scans", "Actions"]
+    : ["Nom", "Taille", "Date", "Scans", "Actions"];
   const entete = table.insertRow();
-  for (const titre of ["Nom", "Taille", "Date", "Scans", "Actions"]) {
+  for (const titre of colonnes) {
     const th = document.createElement("th");
     th.textContent = titre;
     entete.appendChild(th);
@@ -156,6 +187,9 @@ function construireTableau(documents) {
   for (const doc of documents) {
     const ligne = table.insertRow();
     ligne.insertCell().textContent = doc.nom;
+    if (avecProprietaire) {
+      ligne.insertCell().textContent = doc.proprietaire || "— (legacy)";
+    }
     ligne.insertCell().textContent = tailleLisible(doc.taille);
     ligne.insertCell().textContent = doc.date
       ? new Date(doc.date).toLocaleString("fr-FR")
@@ -186,13 +220,14 @@ function construireTableau(documents) {
   return table;
 }
 
-/** Charge (ou recharge) les listes de documents depuis le serveur. */
+/** Charge (ou recharge) la liste des documents de la vue courante. */
 async function chargerDocuments() {
   afficherMessage(msgDocuments, "Chargement…", "");
   try {
-    const reponse = await fetch("/.netlify/functions/list-docs", {
-      headers: { "X-Access-Code": codeAcces },
-    });
+    const reponse = await fetch(
+      "/.netlify/functions/list-docs?scope=" + encodeURIComponent(scopeCourant),
+      { headers: { "X-Access-Code": codeAcces } }
+    );
     const donnees = await reponse.json();
     if (!reponse.ok) {
       // Code devenu invalide (retiré d'ACCESS_CODES par exemple) : retour accueil.
@@ -207,23 +242,25 @@ async function chargerDocuments() {
 
     labelUtilisateur.textContent = donnees.label;
     badgeAdmin.hidden = !donnees.isAdmin;
+    onglets.hidden = !donnees.isAdmin;
 
-    // Mes documents.
+    aideScope.textContent = AIDE_PAR_SCOPE[donnees.scope] || "";
+    aideScope.hidden = !aideScope.textContent;
+
     listeDocuments.innerHTML = "";
     if (donnees.documents.length === 0) {
-      afficherMessage(msgDocuments, "Vous n'avez encore aucun document.", "");
+      const vides = {
+        mine: "Vous n'avez encore aucun document.",
+        all: "Aucun document stocké pour le moment.",
+        legacy: "Aucun document legacy : tout est attribué. 🎉",
+      };
+      afficherMessage(msgDocuments, vides[donnees.scope] || vides.mine, "");
     } else {
-      listeDocuments.appendChild(construireTableau(donnees.documents));
+      // Colonne Propriétaire dans les vues « Tous » et « Legacy ».
+      listeDocuments.appendChild(
+        construireTableau(donnees.documents, donnees.scope !== "mine")
+      );
       afficherMessage(msgDocuments, "", "");
-    }
-
-    // Documents legacy : uniquement si admin et s'il en reste.
-    if (donnees.isAdmin && donnees.legacy.length > 0) {
-      listeLegacy.innerHTML = "";
-      listeLegacy.appendChild(construireTableau(donnees.legacy));
-      sectionLegacy.hidden = false;
-    } else {
-      sectionLegacy.hidden = true;
     }
   } catch {
     afficherMessage(msgDocuments, "Erreur réseau.", "erreur");

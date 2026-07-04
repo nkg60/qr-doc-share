@@ -29,7 +29,10 @@ l'email de chaque personne qui le récupère.
   - store `docs` : les fichiers, clé = token aléatoire, métadonnées = nom
     d'origine, taille en octets, date, type MIME ;
   - store `scans` : les emails collectés (token du document, email, date,
-    user-agent).
+    user-agent) ;
+  - store `admin_actions` : journal des actions d'un admin sur un document
+    dont il n'est pas propriétaire (timestamp, admin, action delete/rotate,
+    document, propriétaire ciblé).
 
 ## Arborescence
 
@@ -40,7 +43,7 @@ netlify/functions/
   upload.mjs         Reçoit un fichier, contrôle le quota individuel, renvoie /d/{token}
   deliver.mjs        Enregistre l'email du visiteur (public), renvoie l'URL de téléchargement
   download.mjs       Sert le fichier (route /download/{token}, public : le token est la clé)
-  list-docs.mjs      Documents de l'utilisateur (+ legacy pour un admin), nb de scans
+  list-docs.mjs      Liste des documents (?scope=mine|all|legacy, all/legacy admin), nb de scans
   rotate-token.mjs   Rotation du token : nouvelle URL, ancienne invalidée, scans conservés
   delete-doc.mjs     Suppression d'un document, scans marqués document_deleted
   scans.mjs          Liste/exporte les emails collectés (JSON ou CSV, par utilisateur)

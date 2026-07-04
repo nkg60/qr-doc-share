@@ -19,18 +19,19 @@
       </span>
     </div>
 
-    <!-- Documents de l'utilisateur connecté -->
+    <!-- Sélecteur de vue : visible uniquement pour un admin. Le filtrage
+         réel est fait côté serveur (paramètre scope de list-docs). -->
+    <div id="onglets" class="onglets" hidden>
+      <button data-scope="mine" class="onglet actif">Mes documents</button>
+      <button data-scope="all" class="onglet">Tous les documents</button>
+      <button data-scope="legacy" class="onglet">Documents legacy</button>
+    </div>
+
+    <!-- Liste des documents de la vue courante -->
     <section id="section-documents">
+      <p id="aide-scope" class="aide" hidden></p>
       <div id="liste-documents"></div>
       <p id="msg-documents" class="message" hidden></p>
-    </section>
-
-    <!-- Documents legacy (sans propriétaire, importés avant la V1.1).
-         Rempli uniquement pour un admin. -->
-    <section id="section-legacy" hidden>
-      <h2>Documents legacy (sans propriétaire)</h2>
-      <p class="aide">Importés avant le passage au multi-utilisateurs. À vous de décider quoi en faire.</p>
-      <div id="liste-legacy"></div>
     </section>
 
     <!-- Affichage du QR code d'un document (voir / re-télécharger / rotation) -->

@@ -1,7 +1,8 @@
 // Utilitaires partagés par les fonctions Netlify.
 // Ce dossier commence par "_" : il n'est pas exposé comme une fonction.
 
-import { timingSafeEqual } from "node:crypto";
+import { timingSafeEqual, randomBytes } from "node:crypto";
+import { getStore } from "@netlify/blobs";
 
 /**
  * Construit une réponse JSON avec le bon en-tête.
@@ -125,4 +126,24 @@ export function exigerProprietaire(utilisateur, metadonneesDoc) {
     return json({ erreur: "Vous n'êtes pas le propriétaire de ce document." }, 403);
   }
   return null;
+}
+
+/**
+ * Traçabilité : journalise dans le store "admin_actions" toute action d'un
+ * admin sur un document dont il n'est PAS propriétaire (y compris legacy).
+ * À appeler après exigerProprietaire : si l'appelant n'est pas propriétaire
+ * et a quand même été autorisé, c'est nécessairement un admin.
+ */
+export async function journaliserActionAdmin(utilisateur, action, token, metadonneesDoc) {
+  if (metadonneesDoc?.owner_code === utilisateur.code) return; // action sur son propre document : rien à tracer
+  const journal = getStore("admin_actions");
+  const cle = `${Date.now()}-${randomBytes(4).toString("hex")}`;
+  await journal.setJSON(cle, {
+    timestamp: new Date().toISOString(),
+    admin_code: utilisateur.code,
+    admin_label: utilisateur.label,
+    action,                                          // "delete" ou "rotate"
+    document_id: token,
+    owner_code: metadonneesDoc?.owner_code ?? null,  // null = document legacy
+  });
 }
