@@ -3,33 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Récupérer le document</title>
+  <title>Récupérer un document</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <main class="carte">
-    <h1>📥 Récupérer le document</h1>
+  <!-- Page publique après scan du QR code. Volontairement SANS header
+       applicatif : le visiteur vient chercher un document, pas utiliser
+       l'app. Identité minimale et rassurante, pensée mobile d'abord. -->
+  <main class="page-centree">
+    <div class="carte">
+      <div class="marque marque-centree" id="marque-doc"></div>
 
-    <!-- Formulaire email : seule information demandée au visiteur -->
-    <section id="section-email">
-      <p class="aide">Indiquez votre adresse email pour accéder au document.</p>
-      <form id="form-email">
-        <input type="email" id="champ-email" placeholder="vous@exemple.fr"
-               autocomplete="email" required>
-        <button type="submit" id="btn-email">Accéder au document</button>
-      </form>
-      <p id="msg-email" class="message" hidden></p>
-    </section>
+      <!-- Formulaire email : seule information demandée au visiteur -->
+      <section id="section-email">
+        <h1 style="text-align:center">Un document a été partagé avec vous</h1>
+        <p class="aide" style="text-align:center; margin-bottom: var(--e4)">
+          Indiquez votre adresse email pour y accéder.
+        </p>
+        <form id="form-email">
+          <div class="groupe-champ">
+            <label for="champ-email">Votre adresse email</label>
+            <input type="email" id="champ-email" placeholder="vous@exemple.fr"
+                   autocomplete="email" required>
+            <p class="aide">Elle sert uniquement à informer l'expéditeur que son document a bien été récupéré.</p>
+          </div>
+          <button type="submit" id="btn-email" class="btn btn-primaire btn-large">Accéder au document</button>
+        </form>
+        <p id="msg-email" class="message erreur" hidden></p>
+      </section>
 
-    <!-- Bouton de téléchargement affiché après enregistrement de l'email
-         (V1 : pas d'envoi d'email, téléchargement direct) -->
-    <section id="section-telechargement" hidden>
-      <p class="succes">✅ Merci ! Votre document est prêt.</p>
-      <p id="nom-document" class="aide"></p>
-      <a id="lien-telechargement" class="bouton-lien" download>Télécharger le document</a>
-    </section>
+      <!-- Téléchargement, affiché après enregistrement de l'email -->
+      <section id="section-telechargement" hidden>
+        <div class="bandeau-succes" id="bandeau-succes"></div>
+        <p id="nom-document" class="aide" style="margin-bottom: var(--e4)"></p>
+        <a id="lien-telechargement" class="btn btn-primaire btn-large" download></a>
+      </section>
+    </div>
+    <p class="pied-public">Partage sécurisé via qr-doc-share</p>
   </main>
 
+  <script src="/js/ui.js"></script>
   <script src="/js/landing.js"></script>
 </body>
 </html>

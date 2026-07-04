@@ -3,77 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Importer un document — Partage par QR code</title>
+  <title>Connexion · qr-doc-share</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <main class="carte">
-    <h1>📄 Partage de documents par QR code</h1>
-
-    <!-- Barre de connexion : navigation à gauche, identité + déconnexion à droite -->
-    <div id="barre-connexion" class="barre-connexion" hidden>
-      <a href="/mes-documents.html">Mes documents</a>
-      <span class="identite">
-        Connecté en tant que <strong id="label-utilisateur"></strong>
-        <span id="badge-admin" class="badge" hidden>admin</span>
-        — <button id="btn-deconnexion" class="petit secondaire">Se déconnecter</button>
-      </span>
-    </div>
-
-    <!-- Étape 1 : saisie du code d'accès (vérifié uniquement côté serveur) -->
-    <section id="section-code">
-      <h2>Code d'accès</h2>
-      <p class="aide">Saisissez votre code à 6 chiffres pour pouvoir importer un document.</p>
+  <!-- Écran de connexion : saisie du code à 6 chiffres, vérifié uniquement
+       côté serveur. Une fois validé, on atterrit sur « Mes documents ». -->
+  <main class="page-centree">
+    <div class="carte">
+      <div class="marque marque-centree" id="marque"></div>
+      <h1 style="text-align:center">Connexion</h1>
+      <p class="aide" style="text-align:center; margin-bottom: var(--e4)">
+        Saisissez votre code d'accès pour gérer et partager vos documents.
+      </p>
       <form id="form-code">
-        <input type="text" id="champ-code" inputmode="numeric" pattern="[0-9]{6}"
-               maxlength="6" placeholder="••••••" autocomplete="one-time-code" required>
-        <button type="submit" id="btn-code">Valider</button>
+        <div class="groupe-champ">
+          <label for="champ-code">Code d'accès</label>
+          <input type="text" id="champ-code" class="champ-code" inputmode="numeric"
+                 pattern="[0-9]{6}" maxlength="6" placeholder="••••••"
+                 autocomplete="one-time-code" required>
+          <p class="aide">Ce code est vérifié par notre serveur, il ne circule jamais en clair dans la page.</p>
+        </div>
+        <button type="submit" id="btn-code" class="btn btn-primaire btn-large">Se connecter</button>
       </form>
-      <p id="msg-code" class="message" hidden></p>
-    </section>
-
-    <!-- Étape 2 : import du fichier (affichée après validation du code) -->
-    <section id="section-upload" hidden>
-      <h2>Importer un document</h2>
-      <p class="aide">Image, PDF ou tout autre fichier.</p>
-      <form id="form-upload">
-        <input type="file" id="champ-fichier" required>
-        <button type="submit" id="btn-upload">Importer et générer le QR code</button>
-      </form>
-      <p id="msg-upload" class="message" hidden></p>
-    </section>
-
-    <!-- Étape 3 : QR code généré -->
-    <section id="section-qr" hidden>
-      <h2>QR code du document</h2>
-      <p class="aide">Faites scanner ce QR code : il mène à la page de récupération du document.</p>
-      <div id="apercu-qr"></div>
-      <p id="url-publique" class="url"></p>
-      <div class="actions">
-        <button id="btn-telecharger-qr">Télécharger le QR (PNG)</button>
-        <button id="btn-copier-url">Copier l'URL</button>
-        <button id="btn-nouveau">Importer un autre document</button>
-      </div>
-      <p id="msg-qr" class="message" hidden></p>
-    </section>
-
-    <!-- Emails collectés (chaque utilisateur voit les siens ; un admin voit tout) -->
-    <section id="section-scans" hidden>
-      <h2>Emails collectés</h2>
-      <div class="actions">
-        <button id="btn-charger-scans">Afficher la liste</button>
-        <button id="btn-export-csv">Exporter en CSV</button>
-        <!-- Filtre par propriétaire : visible uniquement pour un admin -->
-        <select id="filtre-label" hidden>
-          <option value="">Tous</option>
-        </select>
-      </div>
-      <div id="liste-scans"></div>
-      <p id="msg-scans" class="message" hidden></p>
-    </section>
+    </div>
   </main>
 
-  <script src="/js/vendor/qrcode.min.js"></script>
+  <script src="/js/ui.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>
