@@ -10,10 +10,17 @@
   <main class="carte">
     <h1>📄 Partage de documents par QR code</h1>
 
+    <!-- Barre de connexion : label de l'utilisateur + lien vers ses documents -->
+    <p id="barre-connexion" class="barre-connexion" hidden>
+      Connecté : <strong id="label-utilisateur"></strong>
+      <span id="badge-admin" class="badge" hidden>admin</span>
+      — <a href="/mes-documents.html">Mes documents</a>
+    </p>
+
     <!-- Étape 1 : saisie du code d'accès (vérifié uniquement côté serveur) -->
     <section id="section-code">
       <h2>Code d'accès</h2>
-      <p class="aide">Saisissez le code à 6 chiffres pour pouvoir importer un document.</p>
+      <p class="aide">Saisissez votre code à 6 chiffres pour pouvoir importer un document.</p>
       <form id="form-code">
         <input type="text" id="champ-code" inputmode="numeric" pattern="[0-9]{6}"
                maxlength="6" placeholder="••••••" autocomplete="one-time-code" required>
@@ -47,12 +54,16 @@
       <p id="msg-qr" class="message" hidden></p>
     </section>
 
-    <!-- Section admin : emails collectés (visible après validation du code) -->
+    <!-- Emails collectés (chaque utilisateur voit les siens ; un admin voit tout) -->
     <section id="section-scans" hidden>
       <h2>Emails collectés</h2>
       <div class="actions">
         <button id="btn-charger-scans">Afficher la liste</button>
         <button id="btn-export-csv">Exporter en CSV</button>
+        <!-- Filtre par propriétaire : visible uniquement pour un admin -->
+        <select id="filtre-label" hidden>
+          <option value="">Tous</option>
+        </select>
       </div>
       <div id="liste-scans"></div>
       <p id="msg-scans" class="message" hidden></p>

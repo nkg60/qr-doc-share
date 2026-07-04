@@ -1,13 +1,17 @@
 // Logique de la page « Importer » (index.html).
 // Le code d'accès saisi est envoyé au serveur pour vérification (fonction auth),
-// puis rejoué dans l'en-tête X-Access-Code pour l'upload et la consultation
-// des scans. Le code attendu n'existe QUE côté serveur (variable ACCESS_CODE).
+// puis rejoué dans l'en-tête X-Access-Code pour les appels protégés.
+// Le dictionnaire ACCESS_CODES n'existe QUE côté serveur.
 
 // --- Références DOM ---------------------------------------------------------
 const sectionCode = document.getElementById("section-code");
 const sectionUpload = document.getElementById("section-upload");
 const sectionQr = document.getElementById("section-qr");
 const sectionScans = document.getElementById("section-scans");
+
+const barreConnexion = document.getElementById("barre-connexion");
+const labelUtilisateur = document.getElementById("label-utilisateur");
+const badgeAdmin = document.getElementById("badge-admin");
 
 const formCode = document.getElementById("form-code");
 const champCode = document.getElementById("champ-code");
@@ -27,11 +31,17 @@ const msgQr = document.getElementById("msg-qr");
 
 const btnChargerScans = document.getElementById("btn-charger-scans");
 const btnExportCsv = document.getElementById("btn-export-csv");
+const filtreLabel = document.getElementById("filtre-label");
 const listeScans = document.getElementById("liste-scans");
 const msgScans = document.getElementById("msg-scans");
 
-// Code validé, gardé en mémoire pour la session (jamais le code attendu).
+// Session de l'utilisateur (jamais les codes des autres, jamais les quotas).
 let codeAcces = sessionStorage.getItem("codeAcces") || "";
+let monLabel = sessionStorage.getItem("labelUtilisateur") || "";
+let suisAdmin = sessionStorage.getItem("isAdmin") === "1";
+
+// Scans chargés en mémoire (pour le filtre par propriétaire, côté client).
+let scansCharges = [];
 
 // --- Petits utilitaires -----------------------------------------------------
 
@@ -47,6 +57,9 @@ function afficherEspaceImport() {
   sectionCode.hidden = true;
   sectionUpload.hidden = false;
   sectionScans.hidden = false;
+  labelUtilisateur.textContent = monLabel;
+  badgeAdmin.hidden = !suisAdmin;
+  barreConnexion.hidden = false;
 }
 
 // Si un code a déjà été validé dans cette session, on ré-affiche directement
@@ -68,7 +81,11 @@ formCode.addEventListener("submit", async (evenement) => {
 
     if (donnees.valide) {
       codeAcces = champCode.value.trim();
+      monLabel = donnees.label || "";
+      suisAdmin = donnees.isAdmin === true;
       sessionStorage.setItem("codeAcces", codeAcces);
+      sessionStorage.setItem("labelUtilisateur", monLabel);
+      sessionStorage.setItem("isAdmin", suisAdmin ? "1" : "");
       afficherMessage(msgCode, "", "");
       afficherEspaceImport();
     } else {
@@ -102,7 +119,7 @@ formUpload.addEventListener("submit", async (evenement) => {
     const donnees = await reponse.json();
 
     if (!reponse.ok) {
-      // Cas notables : 401 (code invalide) et 413 (quota dépassé).
+      // Cas notables : 401 (code invalide) et 413 (quota individuel dépassé).
       afficherMessage(msgUpload, donnees.erreur || "Échec de l'import.", "erreur");
       return;
     }
@@ -162,9 +179,49 @@ btnNouveau.addEventListener("click", () => {
   sectionUpload.hidden = false;
 });
 
-// --- Section admin : emails collectés -----------------------------------------
+// --- Emails collectés ----------------------------------------------------------
+// Chaque utilisateur ne reçoit du serveur que SES scans ; un admin reçoit tout
+// et dispose d'un filtre par propriétaire (appliqué côté client).
 
-// Chargement et affichage de la liste des scans.
+/** (Re)construit le tableau des scans selon le filtre courant. */
+function afficherTableauScans() {
+  const filtre = filtreLabel.value;
+  const lignes = filtre
+    ? scansCharges.filter((s) => s.proprietaire === filtre)
+    : scansCharges;
+
+  if (lignes.length === 0) {
+    listeScans.innerHTML = "";
+    afficherMessage(msgScans, "Aucun email collecté pour cette sélection.", "");
+    return;
+  }
+
+  // Construction du tableau (textContent partout : aucune injection HTML possible).
+  const colonnes = suisAdmin
+    ? ["Propriétaire", "Document", "Email", "Date"]
+    : ["Document", "Email", "Date"];
+  const table = document.createElement("table");
+  const entete = table.insertRow();
+  for (const titre of colonnes) {
+    const th = document.createElement("th");
+    th.textContent = titre;
+    entete.appendChild(th);
+  }
+  for (const scan of lignes) {
+    const ligne = table.insertRow();
+    if (suisAdmin) ligne.insertCell().textContent = scan.proprietaire;
+    // Un document supprimé reste visible dans l'historique, signalé comme tel.
+    ligne.insertCell().textContent =
+      scan.document + (scan.documentSupprime ? " (supprimé)" : "");
+    ligne.insertCell().textContent = scan.email;
+    ligne.insertCell().textContent = new Date(scan.date).toLocaleString("fr-FR");
+  }
+  listeScans.innerHTML = "";
+  listeScans.appendChild(table);
+  afficherMessage(msgScans, `${lignes.length} email(s) affiché(s).`, "ok");
+}
+
+// Chargement de la liste des scans.
 btnChargerScans.addEventListener("click", async () => {
   afficherMessage(msgScans, "Chargement…", "");
   try {
@@ -178,33 +235,36 @@ btnChargerScans.addEventListener("click", async () => {
       return;
     }
 
-    if (donnees.total === 0) {
-      listeScans.innerHTML = "";
-      afficherMessage(msgScans, "Aucun email collecté pour le moment.", "");
-      return;
+    scansCharges = donnees.scans;
+
+    // Filtre par propriétaire : uniquement pour un admin (pour un utilisateur
+    // normal, il n'y aurait qu'un seul label — le sien).
+    if (donnees.isAdmin) {
+      const labels = [...new Set(scansCharges.map((s) => s.proprietaire))].sort();
+      filtreLabel.innerHTML = "";
+      const optionTous = document.createElement("option");
+      optionTous.value = "";
+      optionTous.textContent = "Tous";
+      filtreLabel.appendChild(optionTous);
+      for (const label of labels) {
+        const option = document.createElement("option");
+        option.value = label;
+        option.textContent = "Documents de " + label;
+        filtreLabel.appendChild(option);
+      }
+      filtreLabel.hidden = false;
+    } else {
+      filtreLabel.hidden = true;
     }
 
-    // Construction du tableau (textContent partout : aucune injection HTML possible).
-    const table = document.createElement("table");
-    const entete = table.insertRow();
-    for (const titre of ["Document", "Email", "Date"]) {
-      const th = document.createElement("th");
-      th.textContent = titre;
-      entete.appendChild(th);
-    }
-    for (const scan of donnees.scans) {
-      const ligne = table.insertRow();
-      ligne.insertCell().textContent = scan.document;
-      ligne.insertCell().textContent = scan.email;
-      ligne.insertCell().textContent = new Date(scan.date).toLocaleString("fr-FR");
-    }
-    listeScans.innerHTML = "";
-    listeScans.appendChild(table);
-    afficherMessage(msgScans, `${donnees.total} email(s) collecté(s).`, "ok");
+    afficherTableauScans();
   } catch {
     afficherMessage(msgScans, "Erreur réseau.", "erreur");
   }
 });
+
+// Changement de filtre : on re-rend le tableau sans rappeler le serveur.
+filtreLabel.addEventListener("change", afficherTableauScans);
 
 // Export CSV : on télécharge via fetch pour pouvoir joindre l'en-tête X-Access-Code.
 btnExportCsv.addEventListener("click", async () => {

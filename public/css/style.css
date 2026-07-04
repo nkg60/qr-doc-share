@@ -33,6 +33,24 @@ body {
   max-width: 540px;
 }
 
+/* Variante plus large pour la page « Mes documents » (tableau + actions) */
+.carte-large { max-width: 860px; }
+
+/* Barre de connexion : label de l'utilisateur + navigation */
+.barre-connexion { font-size: 0.9rem; color: var(--gris-clair); }
+.barre-connexion a { color: var(--bleu); }
+
+/* Badge « admin » à côté du label */
+.badge {
+  display: inline-block;
+  background: var(--bleu);
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
 h1 { font-size: 1.4rem; margin-top: 0; }
 h2 { font-size: 1.05rem; margin-bottom: 0.4rem; }
 
@@ -77,6 +95,25 @@ button, .bouton-lien {
 button:hover, .bouton-lien:hover { background: var(--bleu-fonce); }
 button:disabled { opacity: 0.6; cursor: wait; }
 
+/* Variantes de boutons : petites actions de tableau, secondaire, destructive */
+button.petit { padding: 0.35rem 0.6rem; font-size: 0.8rem; }
+button.secondaire { background: #e5e7eb; color: var(--gris-texte); }
+button.secondaire:hover { background: #d1d5db; }
+button.danger { background: var(--rouge); }
+button.danger:hover { background: #b91c1c; }
+
+/* Liste déroulante (filtre par propriétaire, admin) */
+select {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #fff;
+  color: var(--gris-texte);
+}
+
+.cellule-actions { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+
 .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.8rem; }
 
 /* Messages d'état */
@@ -98,13 +135,19 @@ button:disabled { opacity: 0.6; cursor: wait; }
   border-radius: 6px;
 }
 
-/* Tableau des emails collectés */
-#liste-scans { overflow-x: auto; margin-top: 0.8rem; }
-#liste-scans table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
-#liste-scans th, #liste-scans td {
+/* Tableaux (emails collectés, mes documents, documents legacy) */
+#liste-scans, #liste-documents, #liste-legacy { overflow-x: auto; margin-top: 0.8rem; }
+#liste-scans table, #liste-documents table, #liste-legacy table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85rem;
+}
+#liste-scans th, #liste-scans td,
+#liste-documents th, #liste-documents td,
+#liste-legacy th, #liste-legacy td {
   border: 1px solid #e5e7eb;
   padding: 0.4rem 0.6rem;
   text-align: left;
   white-space: nowrap;
 }
-#liste-scans th { background: var(--fond); }
+#liste-scans th, #liste-documents th, #liste-legacy th { background: var(--fond); }

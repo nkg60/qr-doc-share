@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes documents — Partage par QR code</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="carte carte-large">
+    <h1>🗂️ Mes documents</h1>
+    <p class="barre-connexion">
+      Connecté : <strong id="label-utilisateur"></strong>
+      <span id="badge-admin" class="badge" hidden>admin</span>
+      — <a href="/">← Retour à l'import</a>
+    </p>
+
+    <!-- Documents de l'utilisateur connecté -->
+    <section id="section-documents">
+      <div id="liste-documents"></div>
+      <p id="msg-documents" class="message" hidden></p>
+    </section>
+
+    <!-- Documents legacy (sans propriétaire, importés avant la V1.1).
+         Rempli uniquement pour un admin. -->
+    <section id="section-legacy" hidden>
+      <h2>Documents legacy (sans propriétaire)</h2>
+      <p class="aide">Importés avant le passage au multi-utilisateurs. À vous de décider quoi en faire.</p>
+      <div id="liste-legacy"></div>
+    </section>
+
+    <!-- Affichage du QR code d'un document (voir / re-télécharger / rotation) -->
+    <section id="section-qr" hidden>
+      <h2 id="titre-qr">QR code</h2>
+      <div id="apercu-qr"></div>
+      <p id="url-publique" class="url"></p>
+      <div class="actions">
+        <button id="btn-telecharger-qr">Télécharger le QR (PNG)</button>
+        <button id="btn-copier-url">Copier l'URL</button>
+        <button id="btn-fermer-qr" class="secondaire">Fermer</button>
+      </div>
+      <p id="msg-qr" class="message" hidden></p>
+    </section>
+  </main>
+
+  <script src="/js/vendor/qrcode.min.js"></script>
+  <script src="/js/documents.js"></script>
+</body>
+</html>
